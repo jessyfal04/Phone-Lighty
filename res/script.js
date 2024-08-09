@@ -1,40 +1,53 @@
-var ws;
 var sentR;
 var sentG;
 var sentB;
+var sendSession;
+var sendPass;
+var ws;
+var sendReady;
+
 connect();
 
 function connect() {
-	if (ws != null) {
-		ws.close();
-		ws = null;
-	}
-
-	localip = "projects.jessyfal04.dev";
-	wsport = "8101";
-
-	if (localip == "" || wsport == "") {
-		setMessages("danger", "Please fill all the fields.");
-		return;
-	}
-
-	// connect to the websocket
-	ws = new WebSocket("wss://" + localip + ":" + wsport);
+	ws = new WebSocket("wss://jessyfal04.dev:8101");
 	
 	ws.onopen = function() {
-		setMessages("success", "Connected to the websocket server.");
+		$("#connected").html("Connected");
+		$("#connected").removeClass("is-danger");
+		$("#connected").addClass("is-success");
 	}
 
 	ws.onmessage = function (event) {
 		var data = JSON.parse(event.data);
 
-		if (data["cmd"] == "GET")
-			setBackground(data["args"]);
+		if (data.cmd == 'GET') {
+			setBackground(data["ARGS"]["RGB"]);
+		}
+
+		else if (data.cmd == "SESSION") {
+			sendSession = data["ARGS"]["SESSION"];
+			sendPass = data["ARGS"]["PASS"];
+			$("#sendSession").val(sendSession);
+			sendReady = true;
+		}
+	}
+
+	ws.onclose = function() {
+		$("#connected").html("Disconnected");
+		$("#connected").removeClass("is-success");
+		$("#connected").addClass("is-danger");
+
+		setTimeout(function() {
+			connect();
+		}, 100);
 	}
 }
 
 function send() {
 	var interval = 50;
+	sendSession = null;
+	passSend = null;
+	sendReady = false;
 
 	if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
 		setMessages("danger", "getDisplayMedia API is not supported in this browser.");
@@ -50,7 +63,8 @@ function send() {
 			const ctx = canvas.getContext('2d');
 			const saturationFactor = 3;
 
-			
+			ws.send('{"CMD":"REGISTER"}');
+
 			var itn = setInterval(function() {
 				imageCapture.grabFrame()
 					.then(function(imageBitmap) {
@@ -71,8 +85,7 @@ function send() {
 						const avgG = Math.round(g / numPixels);
 						const avgB = Math.round(b / numPixels);
 						
-						// distance formula avg (r g b) and sent (r g b)
-
+						// distance formula avg (r g b) and sent (r g b
 						var distance = Math.sqrt(Math.pow(avgR - sentR, 2) + Math.pow(avgG - sentG, 2) + Math.pow(avgB - sentB, 2));
 						if (distance < 15) return;
 
@@ -80,22 +93,12 @@ function send() {
 						sentG = avgG;
 						sentB = avgB;
 
-						console.log("Distance: " + distance);
-						console.log("RGB: " + avgR + ", " + avgG + ", " + avgB + " | " + saturationFactor + ", " + saturateRgb(avgR, avgG, avgB, saturationFactor));
-
-						
-						ws.send(JSON.stringify({ cmd: "SET", args: saturateRgb(avgR, avgG, avgB, saturationFactor) }));
-						if (ws.readyState != 1) {
-							setMessages("danger", "Disconnected from the websocket server.");
-							clearInterval(itn);
-						}
+						if (sendReady)
+							ws.send(JSON.stringify({ CMD: "SET", ARGS: {RGB: saturateRgb(avgR, avgG, avgB, saturationFactor), SESSION:sendSession, PASS:sendPass} }));
 
 						setTimeout(function() {}, 300);
 					})
-					.catch(function(error) {
-						// setMessages("warning", "Error grabbing frame.");
-						// clearInterval(itn);
-					});
+					.catch(function(error) {});
 			}, interval);
 		})
 		.catch(function(error) {
@@ -103,23 +106,31 @@ function send() {
 		});
 }
 
-//
 async function receive() {
-	ws.send('{"cmd":"LISTEN"}');
-
-	// use fullbright phone
-
+	var receiveSession = parseInt($("#receiveSession").val());
+	ws.send(JSON.stringify({ CMD: "LISTEN", ARGS: {SESSION:receiveSession} }));
+	// Request wake lock and fullscreen
 	await requestWakeLock();
 	document.documentElement.requestFullscreen();
+
+	// Hide all elements on the page
 	$("body").children().css("display", "none");
 	$("body").css("height", "100vh");
 	$("body").css("width", "100vw");
 }
 
-function setBackground (args) {
-	$("body").css("background-color", "rgb(" + args[0] + "," + args[1] + "," + args[2] + ")");
+function setBackground(RGB) {
+	$("body").css("background-color", "rgb(" + RGB[0] + "," + RGB[1] + "," + RGB[2] + ")");
+}
 
-	// gradient background change
+// Page behavior
+function see(which) {
+	$(".toggle-block").hide();
+	$("#block-" + which).show();
+
+	// Boutons
+	$("#toggles").children().addClass("is-outlined");
+	$("#toggle-"+which).removeClass("is-outlined");
 
 }
 
@@ -149,8 +160,7 @@ function setMessages(type, text) {
     }
 }
 
-//
-
+// Saturation
 // Function to convert RGB to HSL
 function rgbToHsl(r, g, b) {
     r /= 255;
@@ -210,6 +220,7 @@ function saturateRgb(r, g, b, saturationFactor) {
     return hslToRgb(h, s, l);
 }
 
+// Wake Lock API
 let wakeLock = null;
 
 async function requestWakeLock() {

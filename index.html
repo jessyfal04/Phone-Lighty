@@ -6,13 +6,12 @@
 	<title>PhoneLighty</title>
 
 	<link rel="stylesheet" href="res/bulma.min.css">
-	<link rel="stylesheet" href="res/style.css">
 	<script src="res/script.js"></script>
 	<script src="res/jquery-3.7.1.min.js"></script>
 
 	<link rel="icon" type="image/png" href="res/color.png">
 </head>
-<body>
+<body style="transition: background-color 1000ms;">
 	<section class="hero is-info">
 		<div class="hero-body">
 			<h1 class="title">PhoneLighty</h1>
@@ -22,22 +21,46 @@
 
 	<div id="messages" style="position:sticky; top:0px; z-index:10;"></div>
 
-	<section class="section">
+	<section class="box mx-6">
+		<div class="block">
+			<span class="tag is-danger" id="connected">Disconnected</span>
+		</div>
 
-		<div class="box">
-			<div class="field is-grouped">
+		<div class="buttons block" id="toggles">
+			<button class="button is-link is-rounded is-medium is-outlined mr-1" onclick="see('send')" id="toggle-send">Send</button>
+			<button class="button is-link is-rounded is-medium is-outlined mr-1" onclick="see('receive')" id="toggle-receive">Receive</button>
+		</div>
+
+		<div class="block toggle-block" id="block-send" style="display: none;">
+			<h2 class="title is-2">Send</h2>
+
+			<div class="field">
+				<label class="label" for="sessionSend">Session : </label>
+				<div class="control">
+					<input class="input" type="text" placeholder="?" id="sendSession" disabled>
+				</div>
+			</div>
+			<div class="field">
 				<div class="control">
 					<button class="button is-success" onclick="send()">Send</button>
 				</div>
 			</div>
+		</div>
 
-			<div class="field is-grouped">
+		<div class="block toggle-block" id="block-receive" style="display: none;">
+			<h2 class="title is-2">Receive</h2>
+
+			<div class="field">
+				<label class="label" for="sessionSend">Session : </label>
+				<div class="control">
+					<input class="input" type="number" placeholder="1234" id="receiveSession">
+				</div>
+			</div>
+			<div class="field">
 				<div class="control">
 					<button class="button is-success" onclick="receive()">Receive</button>
 				</div>
 			</div>
-
-
 		</div>
 
 	</section>
