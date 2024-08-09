@@ -20,11 +20,11 @@ function connect() {
 	ws.onmessage = function (event) {
 		var data = JSON.parse(event.data);
 
-		if (data.cmd == 'GET') {
+		if (data["CMD"] == 'GET') {
 			setBackground(data["ARGS"]["RGB"]);
 		}
 
-		else if (data.cmd == "SESSION") {
+		else if (data["CMD"] == "SESSION") {
 			sendSession = data["ARGS"]["SESSION"];
 			sendPass = data["ARGS"]["PASS"];
 			$("#sendSession").val(sendSession);
