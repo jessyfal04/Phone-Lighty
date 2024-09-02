@@ -6,15 +6,15 @@ import json
 import random
 import string
 
-LOCAL_IP = "213.165.83.32"
+LOCAL_IP = "127.0.0.1"
 WS_PORT = 8101
 
 RGB = (0, 0, 0)
 listeners = {}
 sessionPass = []
 
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.load_cert_chain('/etc/letsencrypt/live/jessyfal04.dev/fullchain.pem', '/etc/letsencrypt/live/jessyfal04.dev/privkey.pem')
+#ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+#ssl_context.load_cert_chain('/etc/letsencrypt/live/jessyfal04.dev/fullchain.pem', '/etc/letsencrypt/live/jessyfal04.dev/privkey.pem')
 
 sessionCounter = -1
 def generate_session():
@@ -27,9 +27,13 @@ def generate_session_pass():
 
 
 async def start_websocket_server():
-	async with websockets.serve(handle_websocket, LOCAL_IP, WS_PORT, ssl=ssl_context):
-		print("WebSocket server started at wss://" + LOCAL_IP + ":" + str(WS_PORT))
+#	async with websockets.serve(handle_websocket, LOCAL_IP, WS_PORT, ssl=ssl_context):
+#		print("WebSocket server started at wss://" + LOCAL_IP + ":" + str(WS_PORT))
+#		await asyncio.Future()  # Keep the server running
+	async with websockets.serve(handle_websocket, LOCAL_IP, WS_PORT):
+		print("WebSocket server started at ws://" + LOCAL_IP + ":" + str(WS_PORT))
 		await asyncio.Future()  # Keep the server running
+
 
 async def handle_websocket(websocket, path):
 	global RGB
