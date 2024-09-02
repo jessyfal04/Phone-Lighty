@@ -9,7 +9,7 @@ var sendReady;
 connect();
 
 function connect() {
-	ws = new WebSocket("wss://jessyfal04.dev:8101");
+	ws = new WebSocket("wss://jessyfal04.dev/ws/phonelighty/");
 	
 	ws.onopen = function() {
 		$("#connected").html("Connected");
